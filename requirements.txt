@@ -38,6 +38,9 @@ deepeval==1.4.8
 python-multipart==0.0.9
 
 # Development Tools
+pre-commit==4.5.0
 black==24.4.2
 ruff==0.4.10
 isort==5.13.2
+
+-e .
