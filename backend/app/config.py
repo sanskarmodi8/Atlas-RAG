@@ -1,8 +1,19 @@
-from pydantic import BaseSettings
+"""Configuration settings for AtlasRAG backend."""
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
-    openai_api_key: str = ''
+    """Settings for backend."""
+
+    groq_api_key: str = ""
+    default_model: str = "openai/gpt-oss-120b"
+
     class Config:
-        env_file = '.env'
+        """Pydantic Settings configuration."""
+
+        env_file = ".env"
+        extra = "ignore"
+
 
 settings = Settings()
