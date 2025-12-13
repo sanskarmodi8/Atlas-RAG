@@ -1,0 +1,43 @@
+# Core API Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.1
+pydantic==2.8.2
+python-dotenv==1.0.1
+httpx==0.27.0
+
+# LLM & Embedding Clients
+openai==1.37.0
+langchain==0.2.11
+langchain-openai==0.1.8
+
+# Vector Databases
+qdrant-client==1.9.0
+chromadb==0.5.0
+
+# Text Processing & NLP
+pymupdf==1.24.7
+spacy==3.7.4
+sentence-transformers==2.6.1
+rank-bm25==0.2.2
+whoosh==2.7.4
+
+# Graph-RAG
+networkx==3.3
+
+# Machine Learning & Utilities
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.1
+tqdm==4.66.4
+
+# Evaluation (RAG Metrics)
+ragas==0.1.4
+deepeval==1.4.8
+
+# File Upload
+python-multipart==0.0.9
+
+# Development Tools
+black==24.4.2
+ruff==0.4.10
+isort==5.13.2
