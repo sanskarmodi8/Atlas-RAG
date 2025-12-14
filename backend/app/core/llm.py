@@ -18,7 +18,10 @@ def _get_groq_client() -> Groq:
     return Groq(api_key=settings.groq_api_key)
 
 
-def llm_chat(model: str, messages: List[Dict[str, str]]) -> str:
+def llm_chat(
+    messages: List[Dict[str, str]],
+    model: str = settings.default_model,
+) -> str:
     """Generate a chat completion using Groq."""
     client = _get_groq_client()
 
