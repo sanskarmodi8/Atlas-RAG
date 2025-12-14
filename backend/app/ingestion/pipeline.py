@@ -9,6 +9,7 @@ from typing import List
 
 from app.ingestion.chunking import chunk_segments
 from app.ingestion.cleaning import clean_text
+from app.ingestion.indexing import index_chunks
 from app.ingestion.pdf_loader import extract_pages
 from app.models.ingestion import Chunk, RawSegment
 
@@ -31,6 +32,9 @@ def ingest_pdf(file_path: Path, doc_id: str) -> List[Chunk]:
 
     # 3. Convert cleaned pages into semantic chunks
     chunks = chunk_segments(cleaned_segments)
+
+    # 4. Indexing
+    index_chunks(chunks)
 
     return chunks
 
