@@ -4,8 +4,8 @@ import uuid
 from pathlib import Path
 from typing import Dict, List
 
-from app.ingestion.pdf_loader import extract_pages
-from app.models.schemas import RawSegment
+from app.ingestion.pipeline import ingest_pdf
+from app.models.ingestion import Chunk
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 router = APIRouter()
@@ -13,10 +13,10 @@ router = APIRouter()
 DOC_STORAGE = Path("backend/storage/docs")
 
 
-@router.post("/upload", response_model=Dict[str, List[RawSegment]])
+@router.post("/upload", response_model=Dict[str, List[Chunk]])
 def upload_documents(
     files: List[UploadFile] = File(...),
-) -> Dict[str, List[RawSegment]]:
+) -> Dict[str, List[Chunk]]:
     """Upload one or more PDF documents and extract their pages.
 
     Args:
@@ -25,7 +25,7 @@ def upload_documents(
     Returns:
         A mapping of doc_id to raw extracted page segments.
     """
-    results: Dict[str, List[RawSegment]] = {}
+    results: Dict[str, List[Chunk]] = {}
 
     for file in files:
         if not file.filename.lower().endswith(".pdf"):
@@ -39,7 +39,7 @@ def upload_documents(
         with save_path.open("wb") as f:
             f.write(file.file.read())
 
-        segments = extract_pages(save_path, doc_id)
-        results[doc_id] = segments
+        chunks = ingest_pdf(save_path, doc_id)
+        results[doc_id] = chunks
 
     return results

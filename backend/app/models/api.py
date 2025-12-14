@@ -13,11 +13,3 @@ class ChatResponse(BaseModel):
     """Schema for LLM-generated assistant response."""
 
     reply: str
-
-
-class RawSegment(BaseModel):
-    """Represents raw page-level text extracted from a PDF."""
-
-    doc_id: str
-    page: int
-    text: str

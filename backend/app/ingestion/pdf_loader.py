@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import List
 
 import fitz  # PyMuPDF
-from app.models.schemas import RawSegment
+
+from backend.app.models.ingestion import RawSegment
 
 
 def extract_pages(file_path: Path, doc_id: str) -> List[RawSegment]:
@@ -23,26 +24,13 @@ def extract_pages(file_path: Path, doc_id: str) -> List[RawSegment]:
     for page_number in range(doc.page_count):
         page = doc.load_page(page_number)
         text = page.get_text("text")
-
-        cleaned = _clean_text(text)
         segments.append(
             RawSegment(
                 doc_id=doc_id,
                 page=page_number + 1,
-                text=cleaned,
+                text=text,
             )
         )
 
     doc.close()
     return segments
-
-
-def _clean_text(text: str) -> str:
-    """Normalize whitespace and fix basic PDF text artifacts."""
-    if not text:
-        return ""
-
-    # Replace multiple spaces/newlines with clean ones
-    cleaned = " ".join(text.split())
-
-    return cleaned

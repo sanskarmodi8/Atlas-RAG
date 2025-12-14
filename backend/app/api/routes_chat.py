@@ -1,8 +1,9 @@
 """Routes related to chat and LLM testing."""
 
 from app.core.llm import get_default_model, llm_chat
-from app.models.schemas import ChatRequest, ChatResponse
 from fastapi import APIRouter
+
+from backend.app.models.api import ChatRequest, ChatResponse
 
 router = APIRouter()
 

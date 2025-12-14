@@ -1,1 +1,1 @@
-# Will contain prompt templates
+"""Prompt templates used throughout project."""
