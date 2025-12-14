@@ -20,13 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/health")
-def health_check() -> dict:
-    """Return simple health status."""
-    return {"status": "ok"}
-
-
 # Include routers
 app.include_router(chat_router, prefix="/chat")
 app.include_router(docs_router, prefix="/docs")

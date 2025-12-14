@@ -11,13 +11,14 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 router = APIRouter()
 
 DOC_STORAGE = Path("backend/storage/docs")
+DOC_STORAGE.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/upload", response_model=Dict[str, List[Chunk]])
 def upload_documents(
     files: List[UploadFile] = File(...),
 ) -> Dict[str, List[Chunk]]:
-    """Upload one or more PDF documents and extract their pages.
+    """Upload one or more PDF documents.
 
     Args:
         files: Uploaded PDF files.

@@ -1,8 +1,4 @@
-"""High-level document ingestion pipeline.
-
-This module orchestrates the full ingestion flow:
-PDF -> raw pages -> cleaned text -> semantic chunks.
-"""
+"""High-level document ingestion pipeline."""
 
 from pathlib import Path
 from typing import List
@@ -12,44 +8,28 @@ from app.ingestion.cleaning import clean_text
 from app.ingestion.indexing import index_chunks
 from app.ingestion.pdf_loader import extract_pages
 from app.models.ingestion import Chunk, RawSegment
+from app.retrieval.keyword_index import build_bm25_index
 
 
 def ingest_pdf(file_path: Path, doc_id: str) -> List[Chunk]:
-    """Ingest a PDF document into semantic chunks.
-
-    Args:
-        file_path: Path to the PDF file.
-        doc_id: Unique identifier for the document.
-
-    Returns:
-        A list of Chunk objects ready for indexing.
-    """
-    # 1. Extract raw page-level text
+    """Ingest a PDF document into indexed chunks."""
     raw_segments = extract_pages(file_path=file_path, doc_id=doc_id)
-
-    # 2. Clean page text (in-place, but explicit)
     cleaned_segments = _clean_segments(raw_segments)
-
-    # 3. Convert cleaned pages into semantic chunks
     chunks = chunk_segments(cleaned_segments)
 
-    # 4. Indexing
     index_chunks(chunks)
+    build_bm25_index(chunks)
 
     return chunks
 
 
 def _clean_segments(segments: List[RawSegment]) -> List[RawSegment]:
     """Apply text cleaning to raw segments."""
-    cleaned: List[RawSegment] = []
-
-    for segment in segments:
-        cleaned.append(
-            RawSegment(
-                doc_id=segment.doc_id,
-                page=segment.page,
-                text=clean_text(segment.text),
-            )
+    return [
+        RawSegment(
+            doc_id=s.doc_id,
+            page=s.page,
+            text=clean_text(s.text),
         )
-
-    return cleaned
+        for s in segments
+    ]

@@ -1,85 +1,37 @@
-"""Semantic chunking logic without section inference.
-
-This module converts cleaned page-level segments into
-overlapping semantic chunks suitable for embedding and retrieval.
-"""
+"""Chunking logic."""
 
 import uuid
 from typing import List
 
-from app.ingestion.cleaning import clean_text
 from app.models.ingestion import Chunk, RawSegment
 
-# Chunk sizing (character-based, model-agnostic)
-MAX_CHARS = 1500  # ~300–400 tokens
+MAX_CHARS = 1500
 OVERLAP_CHARS = 200
 
 
 def chunk_segments(segments: List[RawSegment]) -> List[Chunk]:
-    """Convert raw page segments into overlapping semantic chunks.
-
-    Chunking strategy:
-    - Sequential accumulation across pages
-    - Fixed max character size
-    - Sliding overlap for context continuity
-    - Page ranges preserved for citation
-    """
-    if not segments:
-        return []
-
+    """Convert RawSegments into size-bounded chunks."""
     chunks: List[Chunk] = []
 
-    current_text = ""
-    page_start = segments[0].page
+    for seg in segments:
+        text = seg.text.strip()
+        start = 0
 
-    for segment in segments:
-        cleaned_text = clean_text(segment.text)
+        while start < len(text):
+            end = start + MAX_CHARS
+            chunk_text = text[start:end]
 
-        if not current_text:
-            page_start = segment.page
-
-        if len(current_text) + len(cleaned_text) <= MAX_CHARS:
-            current_text += " " + cleaned_text
-        else:
             chunks.append(
-                _create_chunk(
-                    doc_id=segment.doc_id,
-                    text=current_text,
-                    page_start=page_start,
-                    page_end=segment.page,
+                Chunk(
+                    chunk_id=str(uuid.uuid4()),
+                    doc_id=seg.doc_id,
+                    page_start=seg.page,
+                    page_end=seg.page,
+                    text=chunk_text.strip(),
                 )
             )
 
-            # Start next chunk with overlap
-            current_text = cleaned_text[-OVERLAP_CHARS:]
-            page_start = segment.page
-
-    # Flush remaining text
-    if current_text:
-        chunks.append(
-            _create_chunk(
-                doc_id=segments[0].doc_id,
-                text=current_text,
-                page_start=page_start,
-                page_end=segments[-1].page,
-            )
-        )
+            # move forward with overlap
+            start = end - OVERLAP_CHARS
 
     return chunks
-
-
-def _create_chunk(
-    *,
-    doc_id: str,
-    text: str,
-    page_start: int,
-    page_end: int,
-) -> Chunk:
-    """Create a Chunk object with metadata."""
-    return Chunk(
-        chunk_id=str(uuid.uuid4()),
-        doc_id=doc_id,
-        page_start=page_start,
-        page_end=page_end,
-        text=text.strip(),
-    )
