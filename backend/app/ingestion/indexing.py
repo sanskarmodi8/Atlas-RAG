@@ -47,6 +47,7 @@ def index_chunks(chunks: List[Chunk]) -> None:
                     "page_start": chunk.page_start,
                     "page_end": chunk.page_end,
                     "text": chunk.text,
+                    "entities": chunk.entities,
                 },
             )
         )

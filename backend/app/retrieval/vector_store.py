@@ -32,6 +32,7 @@ def vector_search(query: str, top_k: int = 5) -> List[ScoredChunk]:
             page_start=payload["page_start"],
             page_end=payload["page_end"],
             text=payload["text"],
+            entities=payload.get("entities", []),
         )
 
         scored_chunks.append(ScoredChunk(chunk=chunk, score=float(point.score)))
