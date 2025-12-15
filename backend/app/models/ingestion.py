@@ -1,10 +1,12 @@
-"""Pydantic models for Ingestion artifacts."""
+"""Pydantic models for ingestion artifacts."""
 
-from pydantic import BaseModel
+from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class RawSegment(BaseModel):
-    """Represents raw page-level text extracted from a PDF."""
+    """Represents raw page-level text extracted from a document."""
 
     doc_id: str
     page: int
@@ -19,3 +21,4 @@ class Chunk(BaseModel):
     page_start: int
     page_end: int
     text: str
+    entities: List[str] = Field(default_factory=list)
