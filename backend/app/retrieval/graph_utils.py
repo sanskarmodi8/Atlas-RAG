@@ -1,12 +1,4 @@
-"""Graph utilities for Graph-RAG.
-
-Responsibilities:
-- Build entity co-occurrence graph
-- Index entity → chunk mappings
-- Extract entities from queries
-- Expand entities via graph traversal
-- Recall chunks via entity relationships
-"""
+"""Graph utilities for adaptive Graph-RAG."""
 
 from collections import defaultdict
 from typing import Dict, Iterable, List, Set
@@ -14,70 +6,70 @@ from typing import Dict, Iterable, List, Set
 import networkx as nx
 from app.models.ingestion import Chunk
 
-# In-memory entity → chunk index
 _ENTITY_TO_CHUNKS: Dict[str, Set[str]] = defaultdict(set)
 
 
 def index_entities(chunks: List[Chunk]) -> None:
-    """Index entities to chunk IDs.
-
-    Called once during ingestion.
-    """
+    """Index concepts to chunk IDs."""
     for chunk in chunks:
-        for entity in chunk.entities:
-            _ENTITY_TO_CHUNKS[entity].add(chunk.chunk_id)
+        for concept in chunk.entities:
+            _ENTITY_TO_CHUNKS[concept].add(chunk.chunk_id)
 
 
 def build_graph(chunks: List[Chunk]) -> nx.Graph:
-    """Build an entity co-occurrence graph.
-
-    Nodes: entities
-    Edges: co-occurrence within the same chunk
-    """
+    """Build a concept co-occurrence graph."""
     graph = nx.Graph()
 
     for chunk in chunks:
-        entities = chunk.entities
+        concepts = chunk.entities
 
-        for entity in entities:
-            graph.add_node(entity)
+        for concept in concepts:
+            graph.add_node(concept)
 
-        for i, e1 in enumerate(entities):
-            for e2 in entities[i + 1 :]:
-                if graph.has_edge(e1, e2):
-                    graph[e1][e2]["weight"] += 1
-                else:
-                    graph.add_edge(e1, e2, weight=1)
+        for i, c1 in enumerate(concepts):
+            for c2 in concepts[i + 1 :]:
+                current_weight = graph.get_edge_data(c1, c2, {}).get("weight", 0)
+                graph.add_edge(
+                    c1,
+                    c2,
+                    weight=current_weight + 1,
+                )
 
     return graph
 
 
 def extract_query_entities(text: str, nlp) -> Set[str]:
-    """Extract entities from a user query.
-
-    Deterministic (spaCy-based).
-    """
-    if not text.strip():
-        return set()
-
+    """Extract concepts from a user query."""
     doc = nlp(text)
-    return {ent.text.strip() for ent in doc.ents if len(ent.text.strip()) >= 3}
+
+    allowed_labels = {
+        "ORG",
+        "PRODUCT",
+        "WORK_OF_ART",
+    }
+
+    return {ent.text.strip() for ent in doc.ents if ent.label_ in allowed_labels}
+
+
+def adaptive_hops(num_entities: int) -> int:
+    """Decide graph expansion depth."""
+    if num_entities <= 1:
+        return 0
+    if num_entities <= 3:
+        return 1
+    return 2
 
 
 def expand_entities(
     graph: nx.Graph,
     entities: Iterable[str],
-    hops: int = 1,
+    hops: int,
 ) -> Set[str]:
-    """Expand entities via graph traversal.
-
-    hops=1 → direct neighbors
-    hops=2 → neighbors of neighbors
-    """
-    expanded: Set[str] = set(entities)
+    """Expand entities via graph traversal."""
+    expanded = set(entities)
 
     for _ in range(hops):
-        neighbors: Set[str] = set()
+        neighbors = set()
         for entity in expanded:
             if entity in graph:
                 neighbors.update(graph.neighbors(entity))
@@ -90,13 +82,10 @@ def chunks_from_entities(
     chunks: List[Chunk],
     entities: Set[str],
 ) -> List[Chunk]:
-    """Recall chunks mentioning any of the given entities.
-
-    THIS is the Graph-RAG recall step.
-    """
-    matched_chunk_ids: Set[str] = set()
+    """Recall chunks mentioning expanded entities."""
+    matched_ids: Set[str] = set()
 
     for entity in entities:
-        matched_chunk_ids |= _ENTITY_TO_CHUNKS.get(entity, set())
+        matched_ids |= _ENTITY_TO_CHUNKS.get(entity, set())
 
-    return [chunk for chunk in chunks if chunk.chunk_id in matched_chunk_ids]
+    return [chunk for chunk in chunks if chunk.chunk_id in matched_ids]

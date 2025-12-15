@@ -20,11 +20,7 @@ def chat(request: ChatRequest) -> ChatResponse:
             citations=[],
         )
 
-    context = "\n\n".join(
-        f"(Pages {sc.chunk.page_start}-\
-{sc.chunk.page_end})\n{sc.chunk.text}"
-        for sc in results
-    )
+    context = "\n\n".join(sc.chunk.text for sc in results)
 
     messages = build_rag_prompt(
         context=context,
