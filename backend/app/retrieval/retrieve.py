@@ -54,11 +54,9 @@ def hybrid_graph_search(query: str, top_k: int) -> List[ScoredChunk]:
     graph = build_graph(all_chunks)
 
     query_entities = extract_query_entities(query, NLP)
-
-    # Fallback when NER finds nothing (VERY IMPORTANT)
+    # Fallback when NER finds nothing
     if not query_entities:
         query_entities = _fallback_query_terms(query)
-
     hops = adaptive_hops(len(query_entities))
 
     graph_recalled: List[ScoredChunk] = []

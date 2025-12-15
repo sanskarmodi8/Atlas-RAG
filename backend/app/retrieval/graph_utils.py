@@ -39,16 +39,23 @@ def build_graph(chunks: List[Chunk]) -> nx.Graph:
 
 
 def extract_query_entities(text: str, nlp) -> Set[str]:
-    """Extract concepts from a user query."""
+    """Extract high-signal concepts from a user query."""
     doc = nlp(text)
 
-    allowed_labels = {
-        "ORG",
-        "PRODUCT",
-        "WORK_OF_ART",
-    }
+    concepts: Set[str] = set()
 
-    return {ent.text.strip() for ent in doc.ents if ent.label_ in allowed_labels}
+    # 1. Named entities (high precision)
+    for ent in doc.ents:
+        if ent.label_ in {"ORG", "PRODUCT", "WORK_OF_ART"}:
+            concepts.add(ent.text.lower())
+
+    # 2. Noun-based keywords (controlled recall)
+    for token in doc:
+        if token.pos_ in {"NOUN", "PROPN"}:
+            if not token.is_stop and len(token.text) >= 4:
+                concepts.add(token.lemma_.lower())
+
+    return concepts
 
 
 def adaptive_hops(num_entities: int) -> int:
