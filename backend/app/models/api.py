@@ -1,5 +1,7 @@
 """Pydantic models for API request and response bodies."""
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -8,6 +10,7 @@ class ChatRequest(BaseModel):
 
     query: str
     top_k: int = 5
+    mode: Literal["qa", "summarize"] = "qa"
 
 
 class Citation(BaseModel):

@@ -10,6 +10,16 @@ Rules:
 - Do NOT add external knowledge.
 """
 
+SUMMARY_SYSTEM_PROMPT = """
+You are a document summarization assistant.
+
+Rules:
+- Produce a concise, well-structured summary of the provided content.
+- Capture key ideas, steps, and distinctions.
+- Do NOT invent information.
+- Do NOT include instructions, questions, or meta commentary.
+"""
+
 
 def build_rag_prompt(context: str, question: str) -> list[dict]:
     """Build messages for RAG-based QA."""
@@ -24,5 +34,16 @@ Context:
 Question:
 {question}
 """.strip(),
+        },
+    ]
+
+
+def build_summary_prompt(context: str) -> list[dict]:
+    """Build messages for RAG-based summarization."""
+    return [
+        {"role": "system", "content": SUMMARY_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f"Document Content:\n{context}",
         },
     ]
