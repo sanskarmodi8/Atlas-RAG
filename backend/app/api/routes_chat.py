@@ -2,7 +2,8 @@
 
 from app.core.llm import llm_chat
 from app.core.prompts import build_rag_prompt
-from app.models.api import ChatRequest, ChatResponse, Citation
+from app.models.api import ChatRequest, ChatResponse
+from app.retrieval.citation_filter import filter_citations
 from app.retrieval.retrieve import hybrid_graph_search
 from fastapi import APIRouter
 
@@ -29,13 +30,12 @@ def chat(request: ChatRequest) -> ChatResponse:
 
     answer = llm_chat(messages=messages)
 
-    citations = [
-        Citation(
-            page_start=sc.chunk.page_start,
-            page_end=sc.chunk.page_end,
-            snippet=sc.chunk.text[:300],
-        )
-        for sc in results
-    ]
+    citations = filter_citations(
+        answer=answer,
+        chunks=results,
+    )
 
-    return ChatResponse(answer=answer, citations=citations)
+    return ChatResponse(
+        answer=answer,
+        citations=citations,
+    )

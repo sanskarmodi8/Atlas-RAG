@@ -1,6 +1,7 @@
 """Main FastAPI application for AtlasRAG backend."""
 
 from app.api.routes_chat import router as chat_router
+from app.api.routes_chat_langchain import router as chat_langchain_router
 from app.api.routes_docs import router as docs_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,3 +24,4 @@ app.add_middleware(
 # Include routers
 app.include_router(chat_router, prefix="/chat")
 app.include_router(docs_router, prefix="/docs")
+app.include_router(chat_langchain_router, prefix="/chat")
