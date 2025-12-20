@@ -13,218 +13,200 @@ license: mit
 
 **Hybrid Graph-Augmented Retrieval-Augmented Generation System**
 
-AtlasRAG is a production-ready **document summarization and question-answering system** that combines **vector search**, **graph-based reasoning**, and **LLM-based generation** to enable grounded, citation-aware responses over uploaded documents.
+AtlasRAG is a production-ready document summarization and question-answering system that combines vector search, graph-based reasoning, and LLM-based generation to enable grounded, citation-aware responses over uploaded documents.
 
-The system is designed to go beyond naive vector similarity by incorporating **concept co-occurrence graphs**, enabling improved contextual coverage for complex, multi-section queries.
+The system goes beyond naive vector similarity by incorporating concept co-occurrence graphs, enabling improved contextual coverage for complex, multi-section queries.
 
 ![AtlasRAG Web Interface](https://drive.google.com/uc?id=1BIfz53BOlS5W9LmHc66sBGyZLO9tg83j)
-[Live App](https://atlas-rag.vercel.app/)
+
+**[Live Demo →](https://atlas-rag.vercel.app/)**
 
 ---
 
 ## ✨ Features
 
-* 📄 **PDF Upload & Ingestion**
-* 🧠 **Hybrid Retrieval**
-
-  * Dense vector similarity
-  * BM25 keyword search
-  * Concept co-occurrence graph expansion
-* 💬 **Unified Chat Interface**
-
-  * Question Answering
-  * Full-document Summarization
-* 📚 **Citation-Aware Responses**
-* 🧩 **Conversation Memory (short-term)**
-* ✏️ **Query Rewriting using chat history**
-* 🔍 **Evaluation Framework for Retrieval Quality**
-* 🧪 **Ablation & Baseline Comparisons**
+- 📄 **PDF Upload & Ingestion** – Seamless document processing
+- 🧠 **Hybrid Retrieval Pipeline**
+  - Dense vector similarity search
+  - BM25 keyword search
+  - Concept co-occurrence graph expansion
+- 💬 **Unified Chat Interface** – Question answering and full-document summarization
+- 📚 **Citation-Aware Responses** – Grounded answers with source attribution
+- 🧩 **Conversation Memory** – Short-term context retention across turns
+- ✏️ **Query Rewriting** – Context-aware reformulation using chat history
+- 🔍 **Evaluation Framework** – Built-in retrieval quality assessment
+- 🧪 **Ablation Studies** – Baseline comparisons and performance validation
 
 ---
 
-## 🧱 System Architecture
+## 🏗️ System Architecture
 
 ```
-PDF → Chunking → Embeddings → Vector Index
-                     ↓
-               Concept Graph
-                     ↓
-        Hybrid Graph-RAG Retrieval
-                     ↓
-            Prompt Construction
-                     ↓
-                 LLM
-                     ↓
-           Answer + Citations
+PDF Document
+    ↓
+Chunking & Parsing
+    ↓
+Embeddings Generation → Vector Index
+    ↓
+Concept Extraction → Co-occurrence Graph
+    ↓
+Hybrid Graph-RAG Retrieval
+    ↓
+Context Assembly & Prompt Construction
+    ↓
+LLM Generation
+    ↓
+Answer + Citations
 ```
 
 ---
 
 ## 🔍 Retrieval Strategy
 
-AtlasRAG uses a **hybrid retrieval pipeline**:
+AtlasRAG employs a three-stage hybrid retrieval pipeline:
 
-1. **Vector Search**
-   Dense embeddings using sentence transformers.
+### 1. Vector Search
+Dense embeddings using sentence transformers for semantic similarity.
 
-2. **Lexical Search**
-   BM25 for keyword anchoring.
+### 2. Lexical Search
+BM25 scoring for keyword-based anchoring and exact term matching.
 
-3. **Graph Expansion**
+### 3. Graph Expansion
+- **Nodes:** Extracted concepts from document chunks
+- **Edges:** Co-occurrence relationships within the corpus
+- **Purpose:** Expand retrieval to conceptually related sections
 
-   * Nodes: extracted concepts
-   * Edges: co-occurrence within document chunks
-   * Purpose: expand retrieval to conceptually related sections
-
-The graph is used to **augment**, not replace, vector retrieval.
+The graph augments (rather than replaces) traditional vector retrieval, providing structural context for multi-hop queries.
 
 ---
 
 ## 📊 Evaluation
 
-### Evaluation Document
+### Evaluation Corpus
 
-All evaluations were conducted using the research paper:
+All evaluations were conducted using:
 
-**“Attention Is All You Need” — Vaswani et al.**
+**"Attention Is All You Need"** by Vaswani et al.
 
-**Why this paper?**
+**Rationale:**
+- Dense conceptual structure with cross-section dependencies
+- Well-defined technical terminology
+- Requires multi-hop reasoning for comprehensive answers
+- Reflects real-world academic document QA scenarios
 
-* Dense conceptual structure
-* Cross-section dependencies
-* Well-defined technical terminology
-* Suitable for testing multi-hop and comparative retrieval
+### Query Types
 
-This avoids toy datasets and reflects **real academic document QA**.
+The evaluation suite includes manually designed queries mapped to expected document pages:
 
----
+- **Localized queries** – Single-concept retrieval  
+  *Example: "What is scaled dot-product attention?"*
 
-### Query Types Evaluated
+- **Distributed queries** – Multi-section synthesis  
+  *Example: "How does self-attention replace recurrence and convolution?"*
 
-The evaluation queries were manually designed and mapped to expected pages:
+- **Comparative queries** – Cross-concept analysis  
+  *Example: "Compare encoder, decoder, and encoder-decoder architectures"*
 
-* **Localized queries**
-  (e.g. *“What is scaled dot-product attention?”*)
+### Metrics
 
-* **Distributed queries**
-  (e.g. *“How does self-attention replace recurrence and convolution?”*)
+- **Recall@5** – Percentage of queries with at least one relevant page retrieved
+- **Coverage** – Number of unique relevant pages retrieved
+- **Diversity** – Fraction of unique pages in the retrieved set
 
-* **Comparative queries**
-  (e.g. *“Compare encoder, decoder, and encoder-decoder architectures”*)
-
----
-
-### Metrics Used
-
-* **Recall@5** – Was at least one expected page retrieved?
-* **Coverage** – Number of unique relevant pages retrieved
-* **Diversity** – Fraction of unique pages in retrieved set
-
-> Precision was intentionally not emphasized due to small K and document-level evaluation.
+*Note: Precision was intentionally de-emphasized due to small K values and page-level evaluation granularity.*
 
 ---
 
-## 📈 Baseline Comparison Results
+## 📈 Results
 
-### Vector Search vs Hybrid Graph-RAG
+### Baseline Comparison: Vector Search vs. Hybrid Graph-RAG
 
-**Key Observations:**
+**Key Findings:**
 
-* **Recall@5 = 1.00** across all evaluated queries
-  → Both methods reliably retrieve relevant information.
+- **Recall@5 = 1.00** across all evaluated queries for both methods
+  - Both approaches reliably retrieve relevant information
 
-* **Coverage & Diversity**
+- **Coverage & Diversity**
+  - Comparable performance between vector-only and hybrid retrieval
+  - Hybrid Graph-RAG occasionally surfaces conceptually adjacent sections
+  - No degradation introduced by graph expansion
 
-  * Comparable between vector-only and hybrid retrieval
-  * Hybrid Graph-RAG occasionally retrieves **conceptually adjacent sections**
-  * No degradation introduced by graph expansion
+**Interpretation:**  
+The graph component does not harm retrieval quality and provides a structural foundation for improvements on larger, more fragmented corpora.
 
-**Interpretation**:
-The graph component does **not harm retrieval quality**, and provides a structural foundation for future improvements on more fragmented or larger corpora.
+### Ablation Study
 
----
+Isolated evaluation of graph reasoning impact:
 
-## 🧪 Ablation Study
+- **Vector Only**
+- **Vector + Graph Expansion**
 
-An ablation study was conducted to isolate the effect of graph reasoning:
-
-* **Vector Only**
-* **Vector + Graph Expansion**
-
-### Result
-
-* Recall, coverage, and diversity remained **stable**
-* Confirms that graph augmentation:
-
-  * Does not introduce noise
-  * Does not degrade retrieval
-  * Is safe to enable in production
-
-This validates the **architectural correctness** of the hybrid approach.
+**Results:**
+- Recall, coverage, and diversity remained stable across configurations
+- Graph augmentation introduces no noise or degradation
+- Validates the architectural safety of hybrid approach for production use
 
 ---
 
 ## 🧠 Conversation Memory & Query Rewriting
 
-* Short-term memory maintains recent user–assistant turns
-* Follow-up queries are rewritten using chat history
-* Enables contextual continuity across turns without polluting retrieval
+- **Short-term memory** maintains recent conversation turns
+- **Context-aware rewriting** reformulates follow-up queries using chat history
+- Enables natural conversational flow without polluting the retrieval pipeline
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Backend
-
-* **FastAPI**
-* **LangChain (optional integration)**
-* **Qdrant / Vector Store**
-* **NetworkX (Graph reasoning)**
-* **Sentence Transformers**
-* **Groq / OpenAI-compatible LLM APIs**
+- FastAPI
+- LangChain (optional integration)
+- Qdrant / Vector Store
+- NetworkX (graph reasoning)
+- Sentence Transformers
+- Groq / OpenAI-compatible LLM APIs
 
 ### Frontend
+- Next.js
+- Modern chat-style UI
+- PDF upload interface
 
-* **Next.js**
-* **Modern chat-style UI**
-* **PDF upload + chat interface**
-
-### Tooling
-
-* **Ruff**
-* **Pre-commit hooks**
-* **Docker**
-* **Hugging Face Spaces**
-* **Vercel**
+### Development & Deployment
+- Ruff (formatting & linting)
+- Pre-commit hooks
+- Docker
+- Hugging Face Spaces (backend)
+- Vercel (frontend)
 
 ---
 
-## Development
+## 🚀 Getting Started
 
-### Local Setup
+### Prerequisites
+- Python 3.9+
+- Node.js 18+
+- Git
+
+### Clone Repository
 
 ```bash
-git clone https://github.com/your-username/Atlas-RAG
+git clone https://github.com/sanskarmodi8/Atlas-RAG
 cd Atlas-RAG
 ```
 
-### Backend
+### Backend Setup
 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Backend runs at:
+Backend runs at: **http://127.0.0.1:8000**
 
-```
-http://127.0.0.1:8000
-```
-
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -232,65 +214,68 @@ npm install
 npm run dev
 ```
 
-Frontend runs at:
-
-```
-http://localhost:3000
-```
+Frontend runs at: **http://localhost:3000**
 
 ---
 
-## Code Quality & Tooling
+## 🧹 Code Quality
 
-This project enforces strict consistency and maintainability.
+This project enforces strict code quality standards.
 
-### Pre-commit Hooks
+### Install Pre-commit Hooks
 
 ```bash
 pre-commit install
 ```
 
-### Formatting & Linting
+### Format & Lint
 
 ```bash
 ruff check .
 ruff format .
 ```
 
-All backend code is compliant with:
-
-* `ruff`
-* `black`-style formatting
-* pre-commit hooks
-
----
-
-## Deployment
-
-### Frontend
-
-* Deployed on **Vercel**
-* Live URL:
-  👉 [https://atlas-rag.vercel.app/](https://atlas-rag.vercel.app/)
-
-### Backend
-
-* Deployed on **Hugging Face Spaces**
-* Live API:
-  👉 [https://sanskarmodi-atlasrag-backend.hf.space/](https://sanskarmodi-atlasrag-backend.hf.space/)
-
-Binary document files are excluded from Git history and handled at runtime.
+All code complies with:
+- Ruff linting rules
+- Black-style formatting
+- Pre-commit validation
 
 ---
 
-## License
+## 🌐 Deployment
 
-This project is licensed under the **MIT License**.
-See the [`LICENSE`](LICENSE) file for details.
+### Production Instances
+
+- **Frontend:** [https://atlas-rag.vercel.app/](https://atlas-rag.vercel.app/)  
+  *Deployed on Vercel*
+
+- **Backend API:** [https://sanskarmodi-atlasrag-backend.hf.space/](https://sanskarmodi-atlasrag-backend.hf.space/)  
+  *Deployed on Hugging Face Spaces*
+
+Binary document files are excluded from version control and handled at runtime.
 
 ---
 
-## Author
+## 📄 License
 
-**Sanskar Modi**
-GitHub: [https://github.com/sanskarmodi8](https://github.com/sanskarmodi8)
+This project is licensed under the **MIT License**.  
+See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+**Sanskar Modi**  
+GitHub: [@sanskarmodi8](https://github.com/sanskarmodi8)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 📧 Contact
+
+For questions or feedback, please open an issue on GitHub.

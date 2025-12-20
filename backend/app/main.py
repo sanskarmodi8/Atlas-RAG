@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # for HF spaces
-sys.path.append(os.path.abspath("app"))
+sys.path.append(os.path.abspath("backend/app"))
 
 app = FastAPI(
     title="AtlasRAG Backend",
