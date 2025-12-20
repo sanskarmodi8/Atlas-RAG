@@ -1,8 +1,8 @@
 """Main FastAPI application for AtlasRAG backend."""
 
 from app.api.routes_chat import router as chat_router
-from app.api.routes_chat_langchain import router as chat_langchain_router
 from app.api.routes_docs import router as docs_router
+from app.api.routes_summarize import router as summarize_langchain_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,7 +12,7 @@ app = FastAPI(
     description="Backend API for AtlasRAG multi-document research assistant.",
 )
 
-# CORS enabled for all origins (safe during development)
+# CORS enabled for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,4 +24,4 @@ app.add_middleware(
 # Include routers
 app.include_router(chat_router, prefix="/chat")
 app.include_router(docs_router, prefix="/docs")
-app.include_router(chat_langchain_router, prefix="/chat")
+app.include_router(summarize_langchain_router, prefix="/summarize")
