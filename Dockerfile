@@ -19,11 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 
 # Create necessary directories for storage
-RUN mkdir -p /data/qdrant /data/docs
+RUN mkdir -p /tmp/qdrant /tmp/docs
 
 # Set environment variables
 ENV PYTHONPATH=backend
-ENV QDRANT_PATH=/data/qdrant
+ENV QDRANT_PATH=/tmp/qdrant
 
 # Expose port 7860 (required by Hugging Face)
 EXPOSE 7860
