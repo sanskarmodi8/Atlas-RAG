@@ -1,10 +1,4 @@
-"""Layout-aware PDF loading utilities.
-
-Extracts semantic text blocks while:
-- preserving headings
-- removing known headers/footers
-- avoiding image blocks
-"""
+"""Layout-aware PDF loading utilities."""
 
 import re
 from pathlib import Path
@@ -13,17 +7,7 @@ from typing import List
 import fitz  # PyMuPDF
 from app.models.ingestion import RawSegment
 
-HEADER_FOOTER_PATTERNS: list[str] = [
-    r"Operations@learnnex\.in",
-    r"www\.LearnNex\.in",
-]
-
 HEADING_REGEX = re.compile(r"^\d+\.\s+[A-Z].+")
-
-
-def _is_header_footer(text: str) -> bool:
-    """Check whether a line matches known header/footer patterns."""
-    return any(re.search(pattern, text) for pattern in HEADER_FOOTER_PATTERNS)
 
 
 def extract_pages(file_path: Path, doc_id: str) -> List[RawSegment]:
@@ -41,7 +25,6 @@ def extract_pages(file_path: Path, doc_id: str) -> List[RawSegment]:
     """
     doc = fitz.open(file_path)
     segments: List[RawSegment] = []
-
     for page_index, page in enumerate(doc):
         blocks = page.get_text("dict")["blocks"]
         current_block: list[str] = []
@@ -56,9 +39,6 @@ def extract_pages(file_path: Path, doc_id: str) -> List[RawSegment]:
                 line_text = " ".join(span["text"] for span in line["spans"]).strip()
 
                 if not line_text:
-                    continue
-
-                if _is_header_footer(line_text):
                     continue
 
                 # New heading → flush previous block

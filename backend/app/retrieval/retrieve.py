@@ -13,8 +13,10 @@ from app.retrieval.graph_utils import (
     extract_query_entities,
 )
 from app.retrieval.keyword_index import bm25_search
+from app.retrieval.reranker import CrossEncoderReranker
 from app.retrieval.vector_store import vector_search
 
+# Keywords that indicate comparison-style queries
 _COMPARISON_KEYWORDS = {
     "difference",
     "different",
@@ -23,6 +25,9 @@ _COMPARISON_KEYWORDS = {
     "vs",
     "versus",
 }
+
+# Initialize reranker once
+_reranker = CrossEncoderReranker()
 
 
 def _fallback_query_terms(query: str) -> Set[str]:
@@ -35,10 +40,11 @@ def hybrid_graph_search(query: str, top_k: int) -> List[ScoredChunk]:
 
     Design principles:
     - Recall is BROAD and independent of top_k
-    - Graph-RAG MUST activate for abstract & comparison queries
+    - Graph-RAG activates for abstract & comparison queries
+    - Cross-encoder reranker provides final precision
     - top_k controls ONLY final context size
     """
-    # 1. Broad seed retrieval
+    # 1. Broad seed retrieval (recall-focused)
     seed_k = max(top_k * 4, 8)
 
     vector_hits = vector_search(query, top_k=seed_k)
@@ -49,14 +55,16 @@ def hybrid_graph_search(query: str, top_k: int) -> List[ScoredChunk]:
     for sc in bm25_hits:
         combined.setdefault(sc.chunk.chunk_id, sc)
 
-    # 2. Graph recall
+    # 2. Graph-based recall expansion
     all_chunks = get_chunks()
     graph = build_graph(all_chunks)
 
     query_entities = extract_query_entities(query, NLP)
+
     # Fallback when NER finds nothing
     if not query_entities:
         query_entities = _fallback_query_terms(query)
+
     hops = adaptive_hops(len(query_entities))
 
     graph_recalled: List[ScoredChunk] = []
@@ -70,7 +78,7 @@ def hybrid_graph_search(query: str, top_k: int) -> List[ScoredChunk]:
                 graph_recalled.append(
                     ScoredChunk(
                         chunk=chunk,
-                        # Recall score — NOT ranking score
+                        # Recall-only score (NOT ranking score)
                         score=0.20 + (0.05 * len(chunk.entities)),
                     )
                 )
@@ -78,26 +86,33 @@ def hybrid_graph_search(query: str, top_k: int) -> List[ScoredChunk]:
     # 3. Merge recall pools
     candidates = list(combined.values()) + graph_recalled
 
-    # 4. Rank (heuristic, reranker-ready)
-    candidates.sort(key=lambda x: x.score, reverse=True)
+    if not candidates:
+        return []
 
-    # 5. Comparison-safe truncation
+    # 4. Cross-encoder reranking (precision step)
+    reranked = _reranker.rerank(
+        query=query,
+        candidates=candidates,
+        top_k=max(top_k, 2),
+    )
+
+    # 5. Comparison-safe final selection
     is_comparison = any(keyword in query.lower() for keyword in _COMPARISON_KEYWORDS)
 
     if is_comparison:
-        # Ensure BOTH sides of comparison survive
-        seen_chunks = set()
+        # Ensure multiple viewpoints survive
+        seen = set()
         final: List[ScoredChunk] = []
 
-        for sc in candidates:
-            if sc.chunk.chunk_id not in seen_chunks:
+        for sc in reranked:
+            if sc.chunk.chunk_id not in seen:
                 final.append(sc)
-                seen_chunks.add(sc.chunk.chunk_id)
+                seen.add(sc.chunk.chunk_id)
 
             if len(final) >= max(top_k, 2):
                 break
 
         return final
 
-    # 6. Final truncate (non-comparison)
-    return candidates[:top_k]
+    # 6. Normal final truncate
+    return reranked[:top_k]
