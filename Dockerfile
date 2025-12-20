@@ -22,7 +22,7 @@ COPY backend/ ./backend/
 RUN mkdir -p /data/qdrant /data/docs
 
 # Set environment variables
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=backend
 ENV QDRANT_PATH=/data/qdrant
 
 # Expose port 7860 (required by Hugging Face)
