@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import List
 
 import fitz  # PyMuPDF
-from app.models.ingestion import RawSegment
+
+from backend.app.models.ingestion import RawSegment
 
 HEADING_REGEX = re.compile(r"^\d+\.\s+[A-Z].+")
 

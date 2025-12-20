@@ -10,7 +10,7 @@ Note:
 
 from typing import Dict, List
 
-from app.models.ingestion import Chunk
+from backend.app.models.ingestion import Chunk
 
 _CHUNKS: Dict[str, Chunk] = {}
 

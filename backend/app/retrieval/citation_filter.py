@@ -7,9 +7,10 @@ directly support the generated answer.
 import re
 from typing import List
 
-from app.models.api import Citation
-from app.models.retrieval import ScoredChunk
 from sentence_transformers import SentenceTransformer, util
+
+from backend.app.models.api import Citation
+from backend.app.models.retrieval import ScoredChunk
 
 # Lightweight sentence embedder
 _SENTENCE_MODEL = SentenceTransformer("all-MiniLM-L6-v2")

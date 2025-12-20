@@ -2,8 +2,9 @@
 
 from typing import Dict, List
 
-from app.config import settings
 from groq import Groq
+
+from backend.app.config import settings
 
 
 def _get_groq_client() -> Groq:

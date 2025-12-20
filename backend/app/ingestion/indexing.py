@@ -2,11 +2,12 @@
 
 from typing import List
 
-from app.config import settings
-from app.core.embeddings import embed_texts
-from app.models.ingestion import Chunk
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from backend.app.config import settings
+from backend.app.core.embeddings import embed_texts
+from backend.app.models.ingestion import Chunk
 
 COLLECTION_NAME = "atlasrag_chunks"
 

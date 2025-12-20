@@ -2,7 +2,7 @@
 
 from typing import List, Tuple
 
-from app.core.llm import llm_chat
+from backend.app.core.llm import llm_chat
 
 Message = Tuple[str, str]
 

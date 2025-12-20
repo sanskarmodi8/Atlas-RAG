@@ -2,9 +2,10 @@
 
 from typing import List
 
-from app.retrieval.retrieve import hybrid_graph_search
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
+
+from backend.app.retrieval.retrieve import hybrid_graph_search
 
 
 class AtlasGraphRetriever(BaseRetriever):

@@ -2,11 +2,12 @@
 
 from typing import List
 
-from app.core.embeddings import embed_texts
-from app.ingestion.indexing import COLLECTION_NAME, get_qdrant_client
-from app.models.ingestion import Chunk
-from app.models.retrieval import ScoredChunk
 from qdrant_client.models import ScoredPoint
+
+from backend.app.core.embeddings import embed_texts
+from backend.app.ingestion.indexing import COLLECTION_NAME, get_qdrant_client
+from backend.app.models.ingestion import Chunk
+from backend.app.models.retrieval import ScoredChunk
 
 
 def vector_search(query: str, top_k: int = 5) -> List[ScoredChunk]:

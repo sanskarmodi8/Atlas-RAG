@@ -1,10 +1,11 @@
 """Main FastAPI application for AtlasRAG backend."""
 
-from app.api.routes_chat import router as chat_router
-from app.api.routes_chat_langchain import router as chat_langchain_router
-from app.api.routes_docs import router as docs_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from backend.app.api.routes_chat import router as chat_router
+from backend.app.api.routes_chat_langchain import router as chat_langchain_router
+from backend.app.api.routes_docs import router as docs_router
 
 app = FastAPI(
     title="AtlasRAG Backend",

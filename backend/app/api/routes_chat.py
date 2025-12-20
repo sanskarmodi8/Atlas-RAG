@@ -1,14 +1,15 @@
 """Chat routes for QA and summarization."""
 
-from app.core.llm import llm_chat
-from app.core.prompts import build_rag_prompt, build_summary_prompt
-from app.memory.conversation import conversation_memory
-from app.memory.query_rewriter import rewrite_query
-from app.models.api import ChatRequest, ChatResponse
-from app.retrieval.chunk_registry import get_chunks
-from app.retrieval.citation_filter import filter_citations
-from app.retrieval.retrieve import hybrid_graph_search
 from fastapi import APIRouter
+
+from backend.app.core.llm import llm_chat
+from backend.app.core.prompts import build_rag_prompt, build_summary_prompt
+from backend.app.memory.conversation import conversation_memory
+from backend.app.memory.query_rewriter import rewrite_query
+from backend.app.models.api import ChatRequest, ChatResponse
+from backend.app.retrieval.chunk_registry import get_chunks
+from backend.app.retrieval.citation_filter import filter_citations
+from backend.app.retrieval.retrieve import hybrid_graph_search
 
 router = APIRouter()
 
@@ -27,6 +28,16 @@ def chat(request: ChatRequest) -> ChatResponse:
                 answer="No documents available to summarize.",
                 citations=[],
             )
+
+        # Filter chunks by selected doc_ids if provided
+        if request.doc_ids:
+            chunks = [chunk for chunk in chunks if chunk.doc_id in request.doc_ids]
+
+            if not chunks:
+                return ChatResponse(
+                    answer="No content found for the selected documents.",
+                    citations=[],
+                )
 
         context = "\n\n".join(chunk.text for chunk in chunks)
         messages = build_summary_prompt(context)
@@ -55,6 +66,10 @@ def chat(request: ChatRequest) -> ChatResponse:
 
     # 3. Retrieve documents
     results = hybrid_graph_search(rewritten_query, request.top_k)
+
+    # Filter results by selected doc_ids if provided
+    if request.doc_ids:
+        results = [r for r in results if r.chunk.doc_id in request.doc_ids]
 
     if not results:
         return ChatResponse(
@@ -86,3 +101,10 @@ def chat(request: ChatRequest) -> ChatResponse:
         answer=answer,
         citations=citations,
     )
+
+
+@router.post("/clear")
+def clear_conversation(session_id: str = "default") -> dict:
+    """Clear conversation history for a session."""
+    conversation_memory.clear(session_id)
+    return {"status": "success", "message": "Conversation cleared"}

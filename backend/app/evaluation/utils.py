@@ -2,7 +2,7 @@
 
 from typing import Iterable
 
-from app.models.retrieval import ScoredChunk
+from backend.app.models.retrieval import ScoredChunk
 
 
 def extract_pages(results: Iterable[ScoredChunk]) -> list[int]:
