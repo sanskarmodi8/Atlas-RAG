@@ -9,18 +9,6 @@ pinned: false
 license: mit
 ---
 
-Good, these are exactly the right things to highlight.
-Below is a **cleanly updated final README** with:
-
-* **Deployment explicitly mentioned**
-* **Live frontend + backend links**
-* **Homepage screenshot embedded**
-* No fluff, no exaggeration, evaluator-friendly
-
-You can **replace your README entirely** with this.
-
----
-
 # AtlasRAG — Hybrid Graph-Enhanced Retrieval-Augmented Generation System
 
 AtlasRAG is a **document-centric Question Answering and Summarization system** that combines **vector search**, **symbolic graph reasoning**, and **LLM-based generation** to produce **grounded, citation-backed answers** from uploaded documents.
