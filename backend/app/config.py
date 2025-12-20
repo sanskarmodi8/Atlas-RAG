@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     default_model: str = "openai/gpt-oss-120b"
     qdrant_path: str = "/data/qdrant"
+    docs_path: str = "/data/docs"
 
     class Config:
         """Pydantic Settings configuration."""

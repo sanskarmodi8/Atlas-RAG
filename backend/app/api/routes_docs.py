@@ -6,13 +6,14 @@ from typing import Dict, List
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from backend.app.config import settings
 from backend.app.ingestion.pipeline import ingest_pdf
 from backend.app.models.ingestion import Chunk
 from backend.app.retrieval.chunk_registry import get_chunks
 
 router = APIRouter()
 
-DOC_STORAGE = Path("backend/storage/docs")
+DOC_STORAGE = Path(settings.docs_path)
 DOC_STORAGE.mkdir(parents=True, exist_ok=True)
 
 

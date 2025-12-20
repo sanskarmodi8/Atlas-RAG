@@ -15,14 +15,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy model
-RUN python -m spacy download en_core_web_sm
-
 # Copy the entire backend directory
 COPY backend/ ./backend/
 
 # Create necessary directories for storage
-RUN mkdir -p /data/qdrant /data/docs /data/uploads
+RUN mkdir -p /data/qdrant /data/docs
 
 # Set environment variables
 ENV PYTHONPATH=/app
