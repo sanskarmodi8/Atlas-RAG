@@ -51,7 +51,7 @@ type ChatMode = 'qa' | 'summarize';
 
 // API SERVICE
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://sanskarmodi-atlasrag-backend.hf.space/';
 
 class ApiService {
   static async uploadDocuments(files: File[]): Promise<Record<string, any>> {
