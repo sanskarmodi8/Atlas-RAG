@@ -1,10 +1,10 @@
 """Compare Vector Search vs Hybrid Graph-RAG."""
 
-from backend.app.evaluation.metrics import coverage, diversity, recall_at_k
-from backend.app.evaluation.test_queries import TEST_QUERIES
-from backend.app.evaluation.utils import extract_pages
-from backend.app.retrieval.retrieve import hybrid_graph_search
-from backend.app.retrieval.vector_store import vector_search
+from app.evaluation.metrics import coverage, diversity, recall_at_k
+from app.evaluation.test_queries import TEST_QUERIES
+from app.evaluation.utils import extract_pages
+from app.retrieval.retrieve import hybrid_graph_search
+from app.retrieval.vector_store import vector_search
 
 
 def _print_block(

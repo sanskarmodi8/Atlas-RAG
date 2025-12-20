@@ -1,8 +1,7 @@
 """Pydantic models for API request and response bodies."""
 
+from app.models.ingestion import Chunk
 from pydantic import BaseModel
-
-from backend.app.models.ingestion import Chunk
 
 
 class KeywordSearchRequest(BaseModel):

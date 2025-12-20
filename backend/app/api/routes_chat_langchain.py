@@ -1,14 +1,13 @@
 """Chat routes using LangChain retriever."""
 
+from app.config import settings
+from app.models.api import ChatRequest, ChatResponse
+from app.models.retrieval import ScoredChunk
+from app.retrieval.citation_filter import filter_citations
+from app.retrieval.langchain_retriever import AtlasGraphRetriever
 from fastapi import APIRouter
 from langchain.chains import RetrievalQA
 from langchain_groq import ChatGroq
-
-from backend.app.config import settings
-from backend.app.models.api import ChatRequest, ChatResponse
-from backend.app.models.retrieval import ScoredChunk
-from backend.app.retrieval.citation_filter import filter_citations
-from backend.app.retrieval.langchain_retriever import AtlasGraphRetriever
 
 router = APIRouter()
 

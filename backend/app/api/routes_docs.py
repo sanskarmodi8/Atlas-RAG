@@ -4,12 +4,11 @@ import uuid
 from pathlib import Path
 from typing import Dict, List
 
+from app.config import settings
+from app.ingestion.pipeline import ingest_pdf
+from app.models.ingestion import Chunk
+from app.retrieval.chunk_registry import get_chunks
 from fastapi import APIRouter, File, HTTPException, UploadFile
-
-from backend.app.config import settings
-from backend.app.ingestion.pipeline import ingest_pdf
-from backend.app.models.ingestion import Chunk
-from backend.app.retrieval.chunk_registry import get_chunks
 
 router = APIRouter()
 
@@ -59,8 +58,8 @@ def remove_document(doc_id: str) -> dict:
     Returns:
         Status message
     """
-    from backend.app.ingestion.indexing import COLLECTION_NAME, get_qdrant_client
-    from backend.app.retrieval.chunk_registry import _CHUNKS
+    from app.ingestion.indexing import COLLECTION_NAME, get_qdrant_client
+    from app.retrieval.chunk_registry import _CHUNKS
 
     # Remove chunks from registry
     chunks_to_remove = [cid for cid, chunk in _CHUNKS.items() if chunk.doc_id == doc_id]

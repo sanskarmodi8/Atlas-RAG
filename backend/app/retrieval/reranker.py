@@ -2,9 +2,8 @@
 
 from typing import List
 
+from app.models.retrieval import ScoredChunk
 from sentence_transformers import CrossEncoder
-
-from backend.app.models.retrieval import ScoredChunk
 
 
 class CrossEncoderReranker:

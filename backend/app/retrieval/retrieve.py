@@ -2,19 +2,19 @@
 
 from typing import Dict, List, Set
 
-from backend.app.ingestion.entities import NLP
-from backend.app.models.retrieval import ScoredChunk
-from backend.app.retrieval.chunk_registry import get_chunks
-from backend.app.retrieval.graph_utils import (
+from app.ingestion.entities import NLP
+from app.models.retrieval import ScoredChunk
+from app.retrieval.chunk_registry import get_chunks
+from app.retrieval.graph_utils import (
     adaptive_hops,
     build_graph,
     chunks_from_entities,
     expand_entities,
     extract_query_entities,
 )
-from backend.app.retrieval.keyword_index import bm25_search
-from backend.app.retrieval.reranker import CrossEncoderReranker
-from backend.app.retrieval.vector_store import vector_search
+from app.retrieval.keyword_index import bm25_search
+from app.retrieval.reranker import CrossEncoderReranker
+from app.retrieval.vector_store import vector_search
 
 # Keywords that indicate comparison-style queries
 _COMPARISON_KEYWORDS = {

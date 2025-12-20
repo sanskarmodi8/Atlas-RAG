@@ -3,7 +3,7 @@
 import uuid
 from typing import List
 
-from backend.app.models.ingestion import Chunk, RawSegment
+from app.models.ingestion import Chunk, RawSegment
 
 MAX_CHARS = 1500
 OVERLAP_CHARS = 200

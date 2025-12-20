@@ -1,15 +1,14 @@
 """Chat routes for QA and summarization."""
 
+from app.core.llm import llm_chat
+from app.core.prompts import build_rag_prompt, build_summary_prompt
+from app.memory.conversation import conversation_memory
+from app.memory.query_rewriter import rewrite_query
+from app.models.api import ChatRequest, ChatResponse
+from app.retrieval.chunk_registry import get_chunks
+from app.retrieval.citation_filter import filter_citations
+from app.retrieval.retrieve import hybrid_graph_search
 from fastapi import APIRouter
-
-from backend.app.core.llm import llm_chat
-from backend.app.core.prompts import build_rag_prompt, build_summary_prompt
-from backend.app.memory.conversation import conversation_memory
-from backend.app.memory.query_rewriter import rewrite_query
-from backend.app.models.api import ChatRequest, ChatResponse
-from backend.app.retrieval.chunk_registry import get_chunks
-from backend.app.retrieval.citation_filter import filter_citations
-from backend.app.retrieval.retrieve import hybrid_graph_search
 
 router = APIRouter()
 

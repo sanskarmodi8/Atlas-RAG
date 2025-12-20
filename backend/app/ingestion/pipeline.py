@@ -3,15 +3,15 @@
 from pathlib import Path
 from typing import List
 
-from backend.app.ingestion.chunking import chunk_segments
-from backend.app.ingestion.cleaning import clean_text
-from backend.app.ingestion.entities import extract_entities
-from backend.app.ingestion.indexing import index_chunks
-from backend.app.ingestion.pdf_loader import extract_pages
-from backend.app.models.ingestion import Chunk, RawSegment
-from backend.app.retrieval.chunk_registry import register_chunks
-from backend.app.retrieval.graph_utils import index_entities
-from backend.app.retrieval.keyword_index import build_bm25_index
+from app.ingestion.chunking import chunk_segments
+from app.ingestion.cleaning import clean_text
+from app.ingestion.entities import extract_entities
+from app.ingestion.indexing import index_chunks
+from app.ingestion.pdf_loader import extract_pages
+from app.models.ingestion import Chunk, RawSegment
+from app.retrieval.chunk_registry import register_chunks
+from app.retrieval.graph_utils import index_entities
+from app.retrieval.keyword_index import build_bm25_index
 
 
 def ingest_pdf(file_path: Path, doc_id: str) -> List[Chunk]:

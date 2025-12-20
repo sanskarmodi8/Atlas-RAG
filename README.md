@@ -9,260 +9,288 @@ pinned: false
 license: mit
 ---
 
-# AtlasRAG — Hybrid Graph-Enhanced Retrieval-Augmented Generation System
+# AtlasRAG
 
-AtlasRAG is a **document-centric Question Answering and Summarization system** that combines **vector search**, **symbolic graph reasoning**, and **LLM-based generation** to produce **grounded, citation-backed answers** from uploaded documents.
+**Hybrid Graph-Augmented Retrieval-Augmented Generation System**
 
-The project demonstrates **end-to-end RAG system engineering**, covering ingestion, retrieval design, reranking, citation grounding, evaluation, memory, and real-world deployment.
+AtlasRAG is a production-ready **document summarization and question-answering system** that combines **vector search**, **graph-based reasoning**, and **LLM-based generation** to enable grounded, citation-aware responses over uploaded documents.
 
----
+The system is designed to go beyond naive vector similarity by incorporating **concept co-occurrence graphs**, enabling improved contextual coverage for complex, multi-section queries.
 
-## 🌐 Live Deployment
-
-AtlasRAG is fully deployed and publicly accessible:
-
-* **Frontend (Vercel)**
-  👉 [https://atlas-rag.vercel.app/](https://atlas-rag.vercel.app/)
-
-* **Backend API (Hugging Face Spaces)**
-  👉 [https://sanskarmodi-atlasrag-backend.hf.space/](https://sanskarmodi-atlasrag-backend.hf.space/)
-
-The frontend communicates with the deployed backend over REST APIs.
+![AtlasRAG Web Interface](https://drive.google.com/uc?id=1BIfz53BOlS5W9LmHc66sBGyZLO9tg83j)
+[Live App](https://atlas-rag.vercel.app/)
 
 ---
 
-## 🖥️ Application Preview
+## ✨ Features
 
-**Home Page (Document Upload & Chat Interface):**
+* 📄 **PDF Upload & Ingestion**
+* 🧠 **Hybrid Retrieval**
 
-![AtlasRAG Web App Screenshot](https://drive.google.com/uc?id=1BIfz53BOlS5W9LmHc66sBGyZLO9tg83j)
+  * Dense vector similarity
+  * BM25 keyword search
+  * Concept co-occurrence graph expansion
+* 💬 **Unified Chat Interface**
 
----
-
-## ✨ Key Features
-
-* **Document Upload & Parsing**
-
-  * PDF ingestion
-  * Page-aware chunking with metadata
-* **Hybrid Retrieval (Core Contribution)**
-
-  * Dense vector search (semantic similarity)
-  * Sparse lexical search (BM25)
-  * Concept co-occurrence graph
-  * Hybrid Graph-RAG retrieval pipeline
-* **Citation-Backed QA**
-
-  * Answers grounded strictly in retrieved chunks
-  * Page-level citations extracted post-generation
-* **Document Summarization**
-
-  * Full-document summarization using all indexed chunks
-* **Conversation Memory**
-
-  * Short-term session-based conversation history
-* **Query Rewriting**
-
-  * Follow-up questions rewritten into standalone queries
-* **Evaluation & Analysis**
-
-  * Baseline comparison (vector vs hybrid)
-  * Ablation study (vector-only vs vector + graph)
-* **Production-First Design**
-
-  * Minimal runtime dependencies
-  * Offline evaluation separated from deployment
+  * Question Answering
+  * Full-document Summarization
+* 📚 **Citation-Aware Responses**
+* 🧩 **Conversation Memory (short-term)**
+* ✏️ **Query Rewriting using chat history**
+* 🔍 **Evaluation Framework for Retrieval Quality**
+* 🧪 **Ablation & Baseline Comparisons**
 
 ---
 
-## 🧠 System Architecture
+## 🧱 System Architecture
 
 ```
-User Query
-   │
-   ├── Conversation Memory
-   │        └── Query Rewriting
-   │
-   ├── Hybrid Retrieval
-   │     ├── Vector Search
-   │     ├── Lexical Search
-   │     └── Graph Expansion
-   │
-   ├── Reranking
-   │
-   ├── LLM Generation
-   │
-   └── Citation Filtering
-           └── Page-level evidence
+PDF → Chunking → Embeddings → Vector Index
+                     ↓
+               Concept Graph
+                     ↓
+        Hybrid Graph-RAG Retrieval
+                     ↓
+            Prompt Construction
+                     ↓
+                 LLM
+                     ↓
+           Answer + Citations
 ```
 
 ---
 
 ## 🔍 Retrieval Strategy
 
-### Vector Search
+AtlasRAG uses a **hybrid retrieval pipeline**:
 
-* Sentence-transformer embeddings
-* Semantic similarity search
+1. **Vector Search**
+   Dense embeddings using sentence transformers.
 
-### Lexical Search
+2. **Lexical Search**
+   BM25 for keyword anchoring.
 
-* BM25 / keyword-based retrieval
-* Improves recall for exact and technical terms
+3. **Graph Expansion**
 
-### Graph-Based Retrieval (AtlasRAG)
+   * Nodes: extracted concepts
+   * Edges: co-occurrence within document chunks
+   * Purpose: expand retrieval to conceptually related sections
 
-* Builds a **concept co-occurrence graph** during ingestion
-* Expands retrieval via entity relationships
-* Improves **coverage and diversity** without harming recall
-
-This hybrid strategy balances:
-
-* Semantic understanding
-* Symbolic structure
-* Explicit document grounding
+The graph is used to **augment**, not replace, vector retrieval.
 
 ---
 
-## 📝 Question Answering
+## 📊 Evaluation
 
-* Answers are generated **only from retrieved context**
-* If information is missing, the system responds:
+### Evaluation Document
 
-  > *“I don't know based on the provided documents.”*
-* Citations are extracted **after generation**
-* Citations include:
+All evaluations were conducted using the research paper:
 
-  * Page numbers
-  * Supporting text snippets
+**“Attention Is All You Need” — Vaswani et al.**
 
----
+**Why this paper?**
 
-## 📄 Document Summarization
+* Dense conceptual structure
+* Cross-section dependencies
+* Well-defined technical terminology
+* Suitable for testing multi-hop and comparative retrieval
 
-* Uses **all indexed chunks**
-* No top-k truncation
-* Designed for long-form documents such as:
-
-  * Research papers
-  * Technical documentation
-  * Academic PDFs
-
-QA and summarization share the same backend pipeline.
+This avoids toy datasets and reflects **real academic document QA**.
 
 ---
 
-## 🧠 Memory & Query Rewriting
+### Query Types Evaluated
 
-### Conversation Memory
+The evaluation queries were manually designed and mapped to expected pages:
 
-* Short-term, session-based
-* Stores recent user and assistant turns
+* **Localized queries**
+  (e.g. *“What is scaled dot-product attention?”*)
 
-### Query Rewriting
+* **Distributed queries**
+  (e.g. *“How does self-attention replace recurrence and convolution?”*)
 
-* Converts follow-up questions into standalone queries
-* Improves retrieval quality without polluting the retriever
-
-Example:
-
-```
-User: What is self-attention?
-User: Why is it better?
-↓
-Rewritten Query:
-Why is self-attention better than recurrence and convolution?
-```
+* **Comparative queries**
+  (e.g. *“Compare encoder, decoder, and encoder-decoder architectures”*)
 
 ---
-
-## 📊 Evaluation Methodology
-
-Evaluation focuses on **retrieval quality**, not subjective LLM scoring.
 
 ### Metrics Used
 
-* **Recall@K** — Whether relevant pages were retrieved
-* **Coverage** — Number of unique relevant pages retrieved
-* **Diversity** — Distribution of retrieved pages
+* **Recall@5** – Was at least one expected page retrieved?
+* **Coverage** – Number of unique relevant pages retrieved
+* **Diversity** – Fraction of unique pages in retrieved set
 
-### Experiments
-
-* **Baseline Comparison**
-
-  * Vector Search vs Hybrid Graph-RAG
-* **Ablation Study**
-
-  * Vector-only vs Vector + Graph expansion
-
-All evaluation runs **offline** and is excluded from production deployment.
+> Precision was intentionally not emphasized due to small K and document-level evaluation.
 
 ---
 
-## ⚙️ Tech Stack
+## 📈 Baseline Comparison Results
+
+### Vector Search vs Hybrid Graph-RAG
+
+**Key Observations:**
+
+* **Recall@5 = 1.00** across all evaluated queries
+  → Both methods reliably retrieve relevant information.
+
+* **Coverage & Diversity**
+
+  * Comparable between vector-only and hybrid retrieval
+  * Hybrid Graph-RAG occasionally retrieves **conceptually adjacent sections**
+  * No degradation introduced by graph expansion
+
+**Interpretation**:
+The graph component does **not harm retrieval quality**, and provides a structural foundation for future improvements on more fragmented or larger corpora.
+
+---
+
+## 🧪 Ablation Study
+
+An ablation study was conducted to isolate the effect of graph reasoning:
+
+* **Vector Only**
+* **Vector + Graph Expansion**
+
+### Result
+
+* Recall, coverage, and diversity remained **stable**
+* Confirms that graph augmentation:
+
+  * Does not introduce noise
+  * Does not degrade retrieval
+  * Is safe to enable in production
+
+This validates the **architectural correctness** of the hybrid approach.
+
+---
+
+## 🧠 Conversation Memory & Query Rewriting
+
+* Short-term memory maintains recent user–assistant turns
+* Follow-up queries are rewritten using chat history
+* Enables contextual continuity across turns without polluting retrieval
+
+---
+
+## 🛠️ Tech Stack
 
 ### Backend
 
-* Python
-* FastAPI
-* Sentence Transformers
-* Qdrant (Vector Store)
-* NetworkX (graph reasoning)
-* LangChain (optional integration)
-* Groq / OpenAI-compatible LLM interface
+* **FastAPI**
+* **LangChain (optional integration)**
+* **Qdrant / Vector Store**
+* **NetworkX (Graph reasoning)**
+* **Sentence Transformers**
+* **Groq / OpenAI-compatible LLM APIs**
 
 ### Frontend
 
-* Deployed on Vercel
-* Document upload + chat interface
+* **Next.js**
+* **Modern chat-style UI**
+* **PDF upload + chat interface**
 
 ### Tooling
 
-* Ruff (linting)
-* Pre-commit hooks
-* Docker
+* **Ruff**
+* **Pre-commit hooks**
+* **Docker**
+* **Hugging Face Spaces**
+* **Vercel**
 
 ---
 
-## 🚀 Deployment Notes
+## Development
 
-* Backend deployed on **Hugging Face Spaces**
-* Frontend deployed on **Vercel**
-* Vector database initialized at runtime
-* Uploaded documents stored dynamically (not committed to git)
+### Local Setup
 
----
-
-## 📁 Project Structure
-
-```
-backend/
-├── app/
-│   ├── core/           # LLM & prompts
-│   ├── ingestion/      # PDF parsing & chunking
-│   ├── retrieval/      # Vector, graph, hybrid search
-│   ├── memory/         # Conversation memory & rewriting
-│   ├── evaluation/     # Baseline & ablation analysis
-│   └── api/            # FastAPI routes
+```bash
+git clone https://github.com/your-username/Atlas-RAG
+cd Atlas-RAG
 ```
 
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Backend runs at:
+
+```
+http://127.0.0.1:8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs at:
+
+```
+http://localhost:3000
+```
+
 ---
 
-## 🎯 Design Rationale
+## Code Quality & Tooling
 
-* **Hybrid retrieval over pure vector search**
-  → Better robustness and coverage
-* **Citation filtering post-generation**
-  → Prevents hallucinated references
-* **Offline evaluation**
-  → Clean production runtime
-* **Query rewriting instead of raw chat context**
-  → Improves retrieval precision
-* **Minimal deployment dependencies**
-  → Faster builds, fewer failures
+This project enforces strict consistency and maintainability.
+
+### Pre-commit Hooks
+
+```bash
+pre-commit install
+```
+
+### Formatting & Linting
+
+```bash
+ruff check .
+ruff format .
+```
+
+All backend code is compliant with:
+
+* `ruff`
+* `black`-style formatting
+* pre-commit hooks
 
 ---
 
-## 📄 License
+## Deployment
 
-[MIT License](LICENSE)
+### Frontend
+
+* Deployed on **Vercel**
+* Live URL:
+  👉 [https://atlas-rag.vercel.app/](https://atlas-rag.vercel.app/)
+
+### Backend
+
+* Deployed on **Hugging Face Spaces**
+* Live API:
+  👉 [https://sanskarmodi-atlasrag-backend.hf.space/](https://sanskarmodi-atlasrag-backend.hf.space/)
+
+Binary document files are excluded from Git history and handled at runtime.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**.
+See the [`LICENSE`](LICENSE) file for details.
+
+---
+
+## Author
+
+**Sanskar Modi**
+GitHub: [https://github.com/sanskarmodi8](https://github.com/sanskarmodi8)

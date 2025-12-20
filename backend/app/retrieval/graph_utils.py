@@ -4,8 +4,7 @@ from collections import defaultdict
 from typing import Dict, Iterable, List, Set
 
 import networkx as nx
-
-from backend.app.models.ingestion import Chunk
+from app.models.ingestion import Chunk
 
 _ENTITY_TO_CHUNKS: Dict[str, Set[str]] = defaultdict(set)
 

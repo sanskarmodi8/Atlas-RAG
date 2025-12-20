@@ -2,8 +2,8 @@
 
 from typing import List
 
-from backend.app.models.retrieval import ScoredChunk
-from backend.app.retrieval.vector_store import vector_search
+from app.models.retrieval import ScoredChunk
+from app.retrieval.vector_store import vector_search
 
 
 def vector_only_search(query: str, top_k: int) -> List[ScoredChunk]:

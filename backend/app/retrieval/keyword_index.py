@@ -2,10 +2,9 @@
 
 from typing import List
 
+from app.models.ingestion import Chunk
+from app.models.retrieval import ScoredChunk
 from rank_bm25 import BM25Okapi
-
-from backend.app.models.ingestion import Chunk
-from backend.app.models.retrieval import ScoredChunk
 
 _bm25: BM25Okapi | None = None
 _chunks: List[Chunk] = []
