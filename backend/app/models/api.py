@@ -11,6 +11,7 @@ class ChatRequest(BaseModel):
     query: str
     top_k: int = 5
     mode: Literal["qa", "summarize"] = "qa"
+    session_id: str = "default"
 
 
 class Citation(BaseModel):

@@ -2,6 +2,8 @@
 
 from app.core.llm import llm_chat
 from app.core.prompts import build_rag_prompt, build_summary_prompt
+from app.memory.conversation import conversation_memory
+from app.memory.query_rewriter import rewrite_query
 from app.models.api import ChatRequest, ChatResponse
 from app.retrieval.chunk_registry import get_chunks
 from app.retrieval.citation_filter import filter_citations
@@ -13,9 +15,11 @@ router = APIRouter()
 
 @router.post("/ask", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """Unified QA + Summarization endpoint."""
+    """Unified QA + Summarization endpoint with memory and query rewriting."""
+    session_id = request.session_id
+
+    # SUMMARIZATION MODE
     if request.mode == "summarize":
-        # Summarization uses ALL chunks (no top_k truncation)
         chunks = get_chunks()
 
         if not chunks:
@@ -29,13 +33,28 @@ def chat(request: ChatRequest) -> ChatResponse:
 
         answer = llm_chat(messages=messages)
 
-        # no citations for summarization
-        citations = []
+        # Store conversation
+        conversation_memory.add_user_message(session_id, request.query)
+        conversation_memory.add_assistant_message(session_id, answer)
 
-        return ChatResponse(answer=answer, citations=citations)
+        return ChatResponse(
+            answer=answer,
+            citations=[],
+        )
 
-    # QA MODE (default)
-    results = hybrid_graph_search(request.query, request.top_k)
+    # QA MODE (DEFAULT)
+
+    # 1. Load conversation history
+    history = conversation_memory.get_history(session_id)
+
+    # 2. Rewrite query using history
+    rewritten_query = rewrite_query(
+        question=request.query,
+        history=history,
+    )
+
+    # 3. Retrieve documents
+    results = hybrid_graph_search(rewritten_query, request.top_k)
 
     if not results:
         return ChatResponse(
@@ -43,10 +62,27 @@ def chat(request: ChatRequest) -> ChatResponse:
             citations=[],
         )
 
+    # 4. Build prompt
     context = "\n\n".join(sc.chunk.text for sc in results)
-    messages = build_rag_prompt(context, request.query)
+    messages = build_rag_prompt(
+        context=context,
+        question=rewritten_query,
+    )
 
+    # 5. Generate answer
     answer = llm_chat(messages=messages)
-    citations = filter_citations(answer=answer, chunks=results)
 
-    return ChatResponse(answer=answer, citations=citations)
+    # 6. Filter citations
+    citations = filter_citations(
+        answer=answer,
+        chunks=results,
+    )
+
+    # 7. Store conversation
+    conversation_memory.add_user_message(session_id, request.query)
+    conversation_memory.add_assistant_message(session_id, answer)
+
+    return ChatResponse(
+        answer=answer,
+        citations=citations,
+    )
