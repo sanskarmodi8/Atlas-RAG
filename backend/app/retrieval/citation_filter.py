@@ -29,13 +29,17 @@ def filter_citations(
     answer: str,
     chunks: List[ScoredChunk],
 ) -> List[Citation]:
-    """Filter citations to only answer-supporting sentences."""
+    """Filter citations to only answer-supporting\
+    
+    sentences, returning unique results.
+    """
     if not answer.strip():
         return []
 
     answer_embedding = _SENTENCE_MODEL.encode(answer, normalize_embeddings=True)
 
     filtered: List[Citation] = []
+    seen_snippets = set()  # Track unique snippets
 
     for sc in chunks:
         sentences = _split_sentences(sc.chunk.text)
@@ -49,9 +53,7 @@ def filter_citations(
 
         similarities = util.cos_sim(answer_embedding, sentence_embeddings)[0]
 
-        # Collect best supporting sentences
         selected_sentences: List[str] = []
-
         for sent, score in zip(sentences, similarities):
             if float(score) >= _SIMILARITY_THRESHOLD:
                 selected_sentences.append(sent)
@@ -62,12 +64,22 @@ def filter_citations(
         if not selected_sentences:
             continue
 
-        filtered.append(
-            Citation(
-                page_start=sc.chunk.page_start,
-                page_end=sc.chunk.page_end,
-                snippet=" ".join(selected_sentences),
+        # Create the combined snippet string
+        final_snippet = " ".join(selected_sentences)
+
+        # CHECK FOR UNIQUENESS
+        # We use a tuple of (page, snippet) to ensure
+        # uniqueness across both content and source
+        citation_key = (sc.chunk.page_start, sc.chunk.page_end, final_snippet)
+
+        if citation_key not in seen_snippets:
+            seen_snippets.add(citation_key)
+            filtered.append(
+                Citation(
+                    page_start=sc.chunk.page_start,
+                    page_end=sc.chunk.page_end,
+                    snippet=final_snippet,
+                )
             )
-        )
 
     return filtered
