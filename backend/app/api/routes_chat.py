@@ -38,7 +38,21 @@ def chat(request: ChatRequest) -> ChatResponse:
                     citations=[],
                 )
 
+        # ADD TOKEN CHECK HERE
         context = "\n\n".join(chunk.text for chunk in chunks)
+        estimated_tokens = len(context) // 4
+
+        from app.config import settings
+
+        if estimated_tokens > settings.max_summary_tokens:
+            return ChatResponse(
+                answer=f"The selected documents are too large \
+to summarize ({estimated_tokens:,} tokens). "
+                f"Maximum allowed: {settings.max_summary_tokens:,} tokens. "
+                f"Please select fewer documents or upload smaller PDFs.",
+                citations=[],
+            )
+
         messages = build_summary_prompt(context)
 
         answer = llm_chat(messages=messages)

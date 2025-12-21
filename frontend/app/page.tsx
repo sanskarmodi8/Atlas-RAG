@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Send, FileText, MessageSquare, Loader2, AlertCircle, Trash2 } from 'lucide-react';
+import { Upload, Send, FileText, MessageSquare, Loader2, AlertCircle, Trash2, AlertTriangle } from 'lucide-react';
 
 // Add custom scrollbar styles
 const customScrollbarStyles = `
@@ -47,6 +47,11 @@ interface UploadedDocument {
   uploadedAt: string;
 }
 
+interface TokenCounts {
+  doc_token_counts: Record<string, number>;
+  max_summary_tokens: number;
+}
+
 type ChatMode = 'qa' | 'summarize';
 
 // API SERVICE
@@ -77,6 +82,16 @@ class ApiService {
 
     if (!response.ok) {
       throw new Error(`Remove failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  static async getTokenCounts(): Promise<TokenCounts> {
+    const response = await fetch(`${API_BASE}/docs/token-counts`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch token counts: ${response.statusText}`);
     }
 
     return response.json();
@@ -529,10 +544,20 @@ function ChatInterface({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [tokenCounts, setTokenCounts] = useState<TokenCounts | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const messages = mode === 'qa' ? qaMessages : summarizeMessages;
   const setMessages = mode === 'qa' ? setQaMessages : setSummarizeMessages;
+
+  // Fetch token counts when documents change
+  useEffect(() => {
+    if (documents.length > 0) {
+      ApiService.getTokenCounts()
+        .then(setTokenCounts)
+        .catch(err => console.error('Failed to fetch token counts:', err));
+    }
+  }, [documents]);
 
   useEffect(() => {
     if (documents.length > 0 && selectedDocIds.length === 0) {
@@ -631,7 +656,36 @@ function ChatInterface({
     }
   };
 
+  const getSelectedTokenCount = (): number => {
+    if (!tokenCounts) return 0;
+    return selectedDocIds.reduce((sum, docId) => {
+      return sum + (tokenCounts.doc_token_counts[docId] || 0);
+    }, 0);
+  };
+
+  const canSelectDoc = (docId: string): boolean => {
+    if (!tokenCounts || mode !== 'summarize') return true;
+    
+    const currentTokens = getSelectedTokenCount();
+    const docTokens = tokenCounts.doc_token_counts[docId] || 0;
+    
+    // If already selected, can always deselect
+    if (selectedDocIds.includes(docId)) return true;
+    
+    // Check if adding this doc would exceed limit
+    return (currentTokens + docTokens) <= tokenCounts.max_summary_tokens;
+  };
+
+  const getDocTokenInfo = (docId: string): { tokens: number; tooLarge: boolean } => {
+    if (!tokenCounts) return { tokens: 0, tooLarge: false };
+    const tokens = tokenCounts.doc_token_counts[docId] || 0;
+    const tooLarge = tokens > tokenCounts.max_summary_tokens;
+    return { tokens, tooLarge };
+  };
+
   const toggleDocSelection = (docId: string) => {
+    if (!canSelectDoc(docId)) return;
+    
     setSelectedDocIds(prev => 
       prev.includes(docId) 
         ? prev.filter(id => id !== docId)
@@ -640,7 +694,25 @@ function ChatInterface({
   };
 
   const selectAllDocs = () => {
-    setSelectedDocIds(documents.map(d => d.doc_id));
+    if (!tokenCounts || mode !== 'summarize') {
+      setSelectedDocIds(documents.map(d => d.doc_id));
+      return;
+    }
+
+    // Add docs one by one until limit reached
+    const validDocs: string[] = [];
+    let totalTokens = 0;
+
+    for (const doc of documents) {
+      const docTokens = tokenCounts.doc_token_counts[doc.doc_id] || 0;
+      if (docTokens > tokenCounts.max_summary_tokens) continue;
+      if (totalTokens + docTokens <= tokenCounts.max_summary_tokens) {
+        validDocs.push(doc.doc_id);
+        totalTokens += docTokens;
+      }
+    }
+
+    setSelectedDocIds(validDocs);
   };
 
   const deselectAllDocs = () => {
@@ -653,6 +725,10 @@ function ChatInterface({
       handleSend();
     }
   };
+
+  const selectedTokens = getSelectedTokenCount();
+  const maxTokens = tokenCounts?.max_summary_tokens || 0;
+  const tokenPercentage = maxTokens > 0 ? (selectedTokens / maxTokens) * 100 : 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -723,7 +799,9 @@ function ChatInterface({
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center text-gray-400">
-            <div className="text-center p-8">
+        
+
+<div className="text-center p-8">
               {mode === 'qa' ? (
                 <>
                   <div className="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
@@ -835,26 +913,71 @@ function ChatInterface({
                   </div>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                  {documents.map(doc => (
-                    <label
-                      key={doc.doc_id}
-                      className="flex items-center gap-3 p-3 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-blue-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedDocIds.includes(doc.doc_id)}
-                        onChange={() => toggleDocSelection(doc.doc_id)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                      />
-                      <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                      <span className="text-sm text-gray-700 truncate flex-1 font-medium">
-                        {doc.filename}
-                      </span>
-                    </label>
-                  ))}
+                  {documents.map(doc => {
+                    const { tokens, tooLarge } = getDocTokenInfo(doc.doc_id);
+                    const selectable = canSelectDoc(doc.doc_id);
+                    
+                    return (
+                      <label
+                        key={doc.doc_id}
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border ${
+                          !selectable && !selectedDocIds.includes(doc.doc_id)
+                            ? 'opacity-50 cursor-not-allowed bg-gray-100 border-gray-300'
+                            : 'hover:bg-white border-transparent hover:border-blue-200'
+                        }`}
+                        title={!selectable ? `Adding this document would exceed token limit (${tokens.toLocaleString()} tokens)` : ''}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDocIds.includes(doc.doc_id)}
+                          onChange={() => toggleDocSelection(doc.doc_id)}
+                          disabled={!selectable && !selectedDocIds.includes(doc.doc_id)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed"
+                        />
+                        <FileText className={`w-4 h-4 flex-shrink-0 ${tooLarge ? 'text-red-500' : 'text-blue-600'}`} />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-gray-700 truncate block font-medium">
+                            {doc.filename}
+                          </span>
+                          {tooLarge && (
+                            <span className="text-xs text-red-600 flex items-center gap-1 mt-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              Too large ({tokens.toLocaleString()} tokens, max: {maxTokens.toLocaleString()})
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             )}
+            
+            {mode === 'summarize' && tokenCounts && selectedDocIds.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Token Usage</span>
+                  <span className="text-sm font-bold text-blue-600">
+                    {selectedTokens.toLocaleString()} / {maxTokens.toLocaleString()}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      tokenPercentage > 90 ? 'bg-red-500' : tokenPercentage > 70 ? 'bg-yellow-500' : 'bg-blue-600'
+                    }`}
+                    style={{ width: `${Math.min(tokenPercentage, 100)}%` }}
+                  />
+                </div>
+                {tokenPercentage > 90 && (
+                  <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Warning: Approaching token limit. Consider deselecting some documents.
+                  </p>
+                )}
+              </div>
+            )}
+            
             <button
               onClick={handleSummarize}
               disabled={loading || !documentsUploaded || selectedDocIds.length === 0}

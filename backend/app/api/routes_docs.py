@@ -105,3 +105,26 @@ def list_documents() -> dict:
         "total_chunks": len(chunks),
         "doc_ids": doc_ids,
     }
+
+
+@router.get("/token-counts")
+def get_document_token_counts() -> dict:
+    """Get approximate token counts for all documents.
+
+    Returns:
+        Dictionary with doc_id -> token_count mapping and max limit
+    """
+    from app.retrieval.chunk_registry import get_chunks
+
+    chunks = get_chunks()
+    doc_token_counts = {}
+
+    for chunk in chunks:
+        # Rough estimate: 1 token ≈ 4 characters
+        tokens = len(chunk.text) // 4
+        doc_token_counts[chunk.doc_id] = doc_token_counts.get(chunk.doc_id, 0) + tokens
+
+    return {
+        "doc_token_counts": doc_token_counts,
+        "max_summary_tokens": settings.max_summary_tokens,
+    }

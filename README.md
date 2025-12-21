@@ -34,6 +34,7 @@ The system goes beyond naive vector similarity by incorporating concept co-occur
 - 📚 **Citation-Aware Responses** – Grounded answers with source attribution
 - 🧩 **Conversation Memory** – Short-term context retention across turns
 - ✏️ **Query Rewriting** – Context-aware reformulation using chat history
+- ⚡ **Token Limit Protection** – Automatic document size validation to prevent API errors
 - 🔍 **Evaluation Framework** – Built-in retrieval quality assessment
 - 🧪 **Ablation Studies** – Baseline comparisons and performance validation
 
